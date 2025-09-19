@@ -1,0 +1,3474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeepMES - Duplo Palete (Compacto)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.6em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: start;
+        }
+
+        .main-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 6px;
+        }
+
+        .machine-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 12px 0;
+            position: relative;
+            flex-direction: column;
+        }
+
+        /* Aviso de Palete sem OP */
+        .pallet-warning {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+            border: 3px solid #fff;
+            z-index: 10;
+            animation: warningPulse 2s infinite;
+            text-align: center;
+            min-width: 280px;
+            max-width: 350px;
+        }
+
+        .warning-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+            animation: warningBounce 1s infinite;
+        }
+
+        .warning-text {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.3;
+        }
+
+        .warning-text strong {
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        @keyframes warningPulse {
+            0% { 
+                transform: translateX(-50%) scale(1);
+                box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+            }
+            50% { 
+                transform: translateX(-50%) scale(1.05);
+                box-shadow: 0 12px 35px rgba(231, 76, 60, 0.6);
+            }
+            100% { 
+                transform: translateX(-50%) scale(1);
+                box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+            }
+        }
+
+        @keyframes warningBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .machine {
+            width: 240px;
+            height: 120px;
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid #ecf0f1;
+        }
+
+        .machine::before {
+            content: "MÁQUINA DE USINAGEM";
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #e74c3c;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .pallet {
+            width: 45px;
+            height: 35px;
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            border-radius: 6px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 9px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+
+        /* Posicionamento base dos paletes */
+        .pallet-1 { left: 12px; }
+        .pallet-2 { right: 12px; }
+
+        /* Palete ativo (em usinagem) - sempre no centro */
+        .pallet.active {
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) translateY(-50%) scale(1.1);
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            box-shadow: 0 5px 20px rgba(46, 204, 113, 0.4);
+            z-index: 2;
+        }
+
+        /* Palete inativo (fora da máquina) - sempre à esquerda */
+        .pallet.waiting {
+            left: 12px !important;
+            right: auto !important;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            opacity: 0.8;
+            z-index: 1;
+        }
+
+        /* Palete neutro (sem status específico) */
+        .pallet.neutral {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            opacity: 0.7;
+        }
+
+        .signal-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .signal {
+            text-align: center;
+            padding: 8px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .signal.active {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .signal.inactive {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .signal-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .op-panel {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .op-card {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 4px solid #3498db;
+        }
+
+        .op-card.executing {
+            border-left-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .op-card.stopped {
+            border-left-color: #e74c3c;
+            background: #fadbd8;
+        }
+
+        .op-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .op-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-executing {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-stopped {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .production-counter {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 8px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tooltip styles */
+        .btn[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+
+        .btn[title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .oee-dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .oee-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .oee-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .oee-card h3 {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .oee-card p {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        .signal-flow {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .signal-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+        }
+
+        .signal-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        .signal-list {
+            list-style: none;
+        }
+
+        .signal-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .signal-list li:last-child {
+            border-bottom: none;
+        }
+
+        .signal-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e74c3c;
+        }
+
+        .signal-status.active {
+            background: #27ae60;
+        }
+
+        .log-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+        }
+
+        .log-entry {
+            margin: 3px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .log-time {
+            color: #3498db;
+        }
+
+        .log-event {
+            color: #f39c12;
+        }
+
+        .log-success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .log-warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .log-danger {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .log-production {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .rules-box {
+            background: #f8f9fa;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .rules-box h4 {
+            color: #17a2b8;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .rules-box ul {
+            margin-left: 15px;
+            font-size: 12px;
+        }
+
+        .rules-box li {
+            margin: 5px 0;
+            color: #495057;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .compact-text {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* Modal de Abertura de OP */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+            font-size: 1.6em;
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .op-info {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .op-info h4 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        /* Status dos Paletes no Modal */
+        .pallet-status-info {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .pallet-status-info h4 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        .pallet-status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .pallet-status-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .pallet-status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #6c757d;
+        }
+
+        .pallet-status-indicator.available {
+            background: #28a745;
+        }
+
+        .pallet-status-indicator.occupied {
+            background: #dc3545;
+        }
+
+        .pallet-status-indicator.active {
+            background: #007bff;
+        }
+
+        .pallet-status-text {
+            font-size: 12px;
+            flex-grow: 1;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .form-group input::placeholder {
+            color: #bdc3c7;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn-modal {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            min-width: 120px;
+        }
+
+        .btn-confirm {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+        }
+
+        .op-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .op-info h4 {
+            color: #17a2b8;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .op-info p {
+            color: #495057;
+            font-size: 0.85em;
+            margin: 3px 0;
+        }
+
+        /* Dashboard de Visualização da Máquina - Formato Real */
+        .machine-dashboard {
+            width: 100%;
+            max-width: 300px;
+            margin: 0;
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .machine-header {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .machine-header.status-production {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .machine-header.status-setup {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
+        }
+
+        .machine-header.status-stopped {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .machine-header.status-waiting {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+        }
+
+        .machine-header.status-idle {
+            background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+            box-shadow: 0 4px 15px rgba(189, 195, 199, 0.3);
+        }
+
+        .machine-id {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .machine-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .machine-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .status-icon.production {
+            background: #27ae60;
+            color: white;
+            box-shadow: 0 0 20px rgba(39, 174, 96, 0.5);
+        }
+
+        .status-icon.setup {
+            background: #f1c40f;
+            color: white;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+        }
+
+        .status-icon.stopped {
+            background: #e74c3c;
+            color: white;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+
+        .status-icon.waiting {
+            background: #95a5a6;
+            color: white;
+            box-shadow: 0 0 20px rgba(149, 165, 166, 0.5);
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status-timer {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .section {
+            background: white;
+            margin: 2px 0;
+            padding: 8px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 3px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+
+        .metric-item {
+            background: #e74c3c;
+            color: white;
+            text-align: center;
+            padding: 6px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .metric-item.good {
+            background: #27ae60;
+        }
+
+        .metric-item.warning {
+            background: #f39c12;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .metric-arrow {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .production-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+
+        .production-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 6px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .production-label {
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+
+        .production-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .production-value.good {
+            color: #27ae60;
+        }
+
+        .production-value.warning {
+            color: #f39c12;
+        }
+
+        .production-value.danger {
+            color: #e74c3c;
+        }
+
+        .production-arrow {
+            margin-left: 4px;
+            font-size: 10px;
+            color: #bdc3c7;
+        }
+
+        /* Indicadores dos Paletes */
+        .pallet-indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .pallet-indicator {
+            background: #e74c3c;
+            border-radius: 4px;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .pallet-indicator.in-machine {
+            background: #27ae60;
+        }
+
+        .pallet-indicator.op-waiting {
+            background: #f39c12;
+        }
+
+        .pallet-indicator-value {
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            margin-right: 4px;
+        }
+
+        .pallet-indicator-label {
+            color: white;
+            font-size: 8px;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .pallet-indicator-arrow {
+            margin-left: 4px;
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .main-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .machine-dashboard {
+                max-width: 100%;
+                padding: 10px;
+            }
+            
+            .production-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .production-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .machine {
+                width: 200px;
+                height: 100px;
+            }
+            
+            .pallet {
+                width: 35px;
+                height: 25px;
+                font-size: 8px;
+            }
+            
+            .pallet-warning {
+                top: -70px;
+                min-width: 250px;
+                max-width: 300px;
+                padding: 12px 20px;
+            }
+            
+            .warning-text {
+                font-size: 12px;
+            }
+            
+            .warning-text strong {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏭 TeepMES - Monitoramento Duplo Palete</h1>
+            <p>Sistema de Monitoramento Inteligente para Máquinas de Usinagem</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- DASHBOARD DA MÁQUINA - LADO ESQUERDO -->
+            <div class="machine-dashboard">
+                <div class="machine-header">
+                    <div class="machine-id">[3]</div>
+                    <div class="machine-name">MÁQUINA DE USINAGEM</div>
+                    <div class="machine-status">
+                        <div class="status-icon" id="machine-status-icon">
+                            <span id="status-symbol">⏸</span>
+                        </div>
+                        <div class="status-text" id="machine-status-text">Fora de Produção</div>
+                    </div>
+                    <div class="status-timer" id="machine-timer">00:00:00</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Turno</div>
+                    <div class="metrics-grid">
+                        <div class="metric-item" id="oee-item">
+                            <div class="metric-value" id="oee-value">0%</div>
+                            <div class="metric-label">OEE</div>
+                            <div class="metric-arrow">></div>
+                        </div>
+                        <div class="metric-item" id="performance-item">
+                            <div class="metric-value" id="performance-value">0%</div>
+                            <div class="metric-label">PERFORMANCE</div>
+                            <div class="metric-arrow">></div>
+                        </div>
+                        <div class="metric-item" id="availability-item">
+                            <div class="metric-value" id="availability-value">0%</div>
+                            <div class="metric-label">DISPONIBILIDADE</div>
+                            <div class="metric-arrow">></div>
+                        </div>
+                        <div class="metric-item" id="quality-item">
+                            <div class="metric-value" id="quality-value">0%</div>
+                            <div class="metric-label">QUALIDADE</div>
+                            <div class="metric-arrow">></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Indicadores dos Paletes -->
+                    <div style="margin-top: 8px;">
+                        <div class="pallet-indicators-grid">
+                            <div class="pallet-indicator" id="pallet1-indicator">
+                                <div class="pallet-indicator-value" id="pallet1-status">P1</div>
+                                <div class="pallet-indicator-label">PALETE 1</div>
+                                <div class="pallet-indicator-arrow">></div>
+                            </div>
+                            <div class="pallet-indicator" id="pallet2-indicator">
+                                <div class="pallet-indicator-value" id="pallet2-status">P2</div>
+                                <div class="pallet-indicator-label">PALETE 2</div>
+                                <div class="pallet-indicator-arrow">></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Ordem</div>
+                    <div style="margin-bottom: 6px;">
+                        <span style="font-size: 11px; color: #7f8c8d;" id="current-op-display">N/a</span>
+                        <span style="font-size: 11px; color: #7f8c8d; margin-left: 8px;" id="progress-percentage">0%</span>
+                    </div>
+                    <!-- Barra de progresso -->
+                    <div style="background: #ecf0f1; height: 4px; border-radius: 2px; margin-bottom: 8px; overflow: hidden;">
+                        <div id="progress-bar" style="background: #27ae60; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div class="production-grid">
+                        <div class="production-item">
+                            <span class="production-label">OP ATUAL</span>
+                            <span class="production-value" id="current-op">--</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">QTDE PREV.</span>
+                            <span class="production-value" id="planned-qty">0</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">PRODUZIDO</span>
+                            <span class="production-value" id="produced-qty">0</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">PENDENTE</span>
+                            <span class="production-value warning" id="pending-qty">0</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">REFUGO</span>
+                            <span class="production-value warning" id="scrap-qty">0</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">TEMPO REAL</span>
+                            <span class="production-value">0--</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">UNIDADE</span>
+                            <span class="production-value">--</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">TEMPO PREV.</span>
+                            <span class="production-value">0--</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">CICLO REAL</span>
+                            <span class="production-value good" id="real-cycle">0s</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">TEMPO PROD.</span>
+                            <span class="production-value good" id="prod-time">00:00:00</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">PARADAS</span>
+                            <span class="production-value good" id="stop-time">00:00:00</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                        <div class="production-item">
+                            <span class="production-label">OPERADOR</span>
+                            <span class="production-value" id="operator-name">--</span>
+                            <span class="production-arrow">></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIMULADOR E EXEMPLO DA MÁQUINA - LADO DIREITO -->
+            <div>
+                <!-- VISUALIZAÇÃO DA MÁQUINA -->
+                <div class="section">
+                    <h2>🏗️ Máquina & Sinais</h2>
+                    <div class="machine-container">
+                        <!-- Aviso de Palete sem OP -->
+                        <div class="pallet-warning" id="pallet-warning" style="display: none;">
+                            <div class="warning-icon">⚠️</div>
+                            <div class="warning-text">
+                                <strong>PALETE SEM OP!</strong><br>
+                                <span id="warning-pallet-info">Palete ativo sem Ordem de Produção</span>
+                            </div>
+                        </div>
+                        
+                        <div class="machine">
+                            <div class="pallet pallet-1" id="pallet1">
+                                <span>P1</span>
+                            </div>
+                            <div class="pallet pallet-2" id="pallet2">
+                                <span>P2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="signal-grid">
+                        <div class="signal" id="signal1-machine">
+                            <div class="signal-icon">🏭</div>
+                            <div>P1 em Máquina</div>
+                        </div>
+                        <div class="signal" id="signal1-executing">
+                            <div class="signal-icon">⚙️</div>
+                            <div>Usinando</div>
+                        </div>
+                        <div class="signal" id="signal1-ready">
+                            <div class="signal-icon">✅</div>
+                            <div>Peça Pronta</div>
+                        </div>
+                    </div>
+
+                    <div class="signal-grid">
+                        <div class="signal" id="signal2-machine">
+                            <div class="signal-icon">🏭</div>
+                            <div>P2 em Máquina</div>
+                        </div>
+                        <div class="signal" id="signal2-executing">
+                            <div class="signal-icon">⚙️</div>
+                            <div>Usinando</div>
+                        </div>
+                        <div class="signal" id="signal2-ready">
+                            <div class="signal-icon">✅</div>
+                            <div>Peça Pronta</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTROLES -->
+                <div class="section">
+                    <h2>🎮 Controles</h2>
+                    <div class="controls">
+                        <button class="btn btn-primary" onclick="openOPModal()" title="Abrir nova Ordem de Produção">Abrir Nova OP</button>
+                        <button class="btn btn-success" onclick="simulateProduction()" title="Simular produção de uma peça">Simular Produção</button>
+                        <button class="btn btn-warning" onclick="switchPallets()" title="Trocar palete ativo">Trocar Paletes</button>
+                        <button class="btn btn-danger" onclick="openCloseOPModal()" title="Fechar OP por palete">Fechar OP</button>
+                        <button class="btn btn-danger" onclick="openStopMachineModal()" title="Parar máquina por anomalia" id="stop-machine-btn">🛑 Parar Máquina</button>
+                        <button class="btn btn-success" onclick="resumeMachine()" title="Retomar máquina após parada" id="resume-machine-btn" style="display: none;">▶️ Retomar Máquina</button>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-warning" onclick="resetSimulation()" title="Volta ao estado inicial">Reset</button>
+          <button class="btn btn-info" onclick="generateTimelineReport()" title="Gerar relatório da linha do tempo">📊 Relatório</button>
+                    </div>
+                    
+                    <div class="rules-box">
+                        <h4>📋 Descrição dos Cenários</h4>
+                        <ul>
+                            <li><strong>Abrir Nova OP:</strong> Use o formulário para definir OP, palete e operador</li>
+                            <li><strong>Fechar OP:</strong> Selecione o palete e motivo para fechar OP específica</li>
+                            <li><strong>Parar Máquina:</strong> Registre anomalia com motivo, severidade e operador</li>
+                            <li><strong>Retomar Máquina:</strong> Retome produção após correção da anomalia</li>
+                            <li><strong>Cenário 1:</strong> Palete 1 executa OP-001 (300 unidades), Palete 2 em espera</li>
+                            <li><strong>Cenário 2:</strong> Palete 2 executa OP-002 (200 unidades), Palete 1 em espera</li>
+                            <li><strong>Cenário 3:</strong> Simula troca automática: P1 executa → P2 executa → troca</li>
+                            <li><strong>Reset:</strong> Limpa simulação e volta ao estado inicial</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rules-box">
+                        <h4>📊 OPs Pré-Cadastradas</h4>
+                        <ul>
+                            <li><strong>OP-001:</strong> 300 unidades | Ciclo: 8s | Material: Aço Inox 316L | Operador: João Silva</li>
+                            <li><strong>OP-002:</strong> 200 unidades | Ciclo: 12s | Material: Alumínio 6061 | Operador: Maria Santos</li>
+                            <li><strong>Troca Automática:</strong> Dashboard muda automaticamente ao trocar paletes</li>
+                            <li><strong>Buffer Independente:</strong> Cada OP mantém sua produção separadamente</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="main-grid-3">
+            <!-- SINAIS DIGITAIS -->
+            <div class="section">
+                <h2>🔌 Sinais Digitais</h2>
+                <div class="signal-flow">
+                    <div class="signal-card">
+                        <h4>Palete 1</h4>
+                        <ul class="signal-list">
+                            <li>
+                                <span>Palete em máquina</span>
+                                <div class="signal-status" id="p1-machine-status"></div>
+                            </li>
+                            <li>
+                                <span>Usinagem executando</span>
+                                <div class="signal-status" id="p1-exec-status"></div>
+                            </li>
+                            <li>
+                                <span>Peça pronta</span>
+                                <div class="signal-status" id="p1-ready-status"></div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="signal-card">
+                        <h4>Palete 2</h4>
+                        <ul class="signal-list">
+                            <li>
+                                <span>Palete em máquina</span>
+                                <div class="signal-status" id="p2-machine-status"></div>
+                            </li>
+                            <li>
+                                <span>Usinagem executando</span>
+                                <div class="signal-status" id="p2-exec-status"></div>
+                            </li>
+                            <li>
+                                <span>Peça pronta</span>
+                                <div class="signal-status" id="p2-ready-status"></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOG DE EVENTOS -->
+            <div class="section">
+                <h2>📝 Log de Eventos</h2>
+                <div class="log-container" id="event-log">
+                    <div class="log-entry">
+                        <span class="log-time">[10:30:15]</span> 
+                        <span class="log-event">Sistema iniciado</span> - Monitoramento duplo palete ativo
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFORMAÇÕES ADICIONAIS -->
+            <div class="section">
+                <h2>ℹ️ Informações do Sistema</h2>
+                <div class="rules-box">
+                    <h4>🎯 Objetivo</h4>
+                    <p class="compact-text">Monitoramento automatizado de máquinas de usinagem com duplo palete, utilizando sinais digitais para controle inteligente de OPs.</p>
+                </div>
+                
+                <div class="rules-box">
+                    <h4>⚡ Funcionamento</h4>
+                    <ul>
+                        <li>Sinais digitais controlam status automaticamente</li>
+                        <li>OPs associadas manualmente aos paletes</li>
+                        <li>Execução apenas quando palete está em máquina</li>
+                        <li>Troca automática entre paletes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Abertura de OP -->
+    <div id="opModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <h2>🏭 Abertura de OP Simulação</h2>
+                <p>Configure os parâmetros para iniciar uma nova Ordem de Produção</p>
+            </div>
+            
+            <div class="op-info">
+                <h4>📋 Informações da OP</h4>
+                <p><strong>Máquina:</strong> Máquina de Usinagem (Duplo Palete)</p>
+                <p><strong>Status:</strong> Aguardando configuração</p>
+                <p><strong>Regra:</strong> OP sempre atribuída a um palete específico</p>
+            </div>
+
+            <!-- Status dos Paletes -->
+            <div class="pallet-status-info">
+                <h4>🔧 Status dos Paletes</h4>
+                <div class="pallet-status-grid">
+                    <div class="pallet-status-item" id="modal-pallet1-status">
+                        <div class="pallet-status-indicator" id="modal-p1-indicator"></div>
+                        <div class="pallet-status-text">
+                            <strong>Palete 1:</strong> <span id="modal-p1-text">Disponível</span>
+                        </div>
+                    </div>
+                    <div class="pallet-status-item" id="modal-pallet2-status">
+                        <div class="pallet-status-indicator" id="modal-p2-indicator"></div>
+                        <div class="pallet-status-text">
+                            <strong>Palete 2:</strong> <span id="modal-p2-text">Disponível</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="opForm">
+                <div class="form-group">
+                    <label for="opNumber">📝 Número da OP:</label>
+                    <input type="text" id="opNumber" placeholder="Ex: OP-001, OP-002..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="palletSelect">🎯 Palete:</label>
+                    <select id="palletSelect" required>
+                        <option value="">Selecione o palete</option>
+                        <option value="1">Palete 1 (P1)</option>
+                        <option value="2">Palete 2 (P2)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>👨‍🔧 Operador da Máquina:</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div id="current-operator-display" style="flex: 1; padding: 10px; background: #e8f4fd; border: 1px solid #3498db; border-radius: 5px; font-weight: bold;">
+                            Nenhum operador definido
+                        </div>
+                        <button type="button" id="change-operator-btn" class="btn-modal btn-warning" style="padding: 10px 15px; font-size: 12px;" onclick="changeMachineOperator()">
+                            🔄 Trocar
+                        </button>
+                    </div>
+                    <input type="text" id="operatorCode" placeholder="Digite o código do novo operador..." style="display: none; margin-top: 10px;">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-modal btn-confirm">Abrir OP</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Fechamento de OP -->
+    <div id="closeOPModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCloseModal()">&times;</span>
+            <div class="modal-header">
+                <h2>🔒 Fechamento de OP</h2>
+                <p>Selecione o palete e confirme o fechamento da Ordem de Produção</p>
+            </div>
+            
+            <div class="op-info">
+                <h4>📋 OPs Ativas</h4>
+                <div id="active-ops-list">
+                    <!-- Será preenchido dinamicamente -->
+                </div>
+            </div>
+
+            <form id="closeOPForm">
+                <div class="form-group">
+                    <label for="closePalletSelect">🎯 Palete para Fechar:</label>
+                    <select id="closePalletSelect" required>
+                        <option value="">Selecione o palete</option>
+                        <option value="1" id="close-pallet1-option">Palete 1 (P1)</option>
+                        <option value="2" id="close-pallet2-option">Palete 2 (P2)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="closeReason">📝 Motivo do Fechamento:</label>
+                    <select id="closeReason" required>
+                        <option value="">Selecione o motivo</option>
+                        <option value="completed">Produção Concluída</option>
+                        <option value="cancelled">OP Cancelada</option>
+                        <option value="error">Erro na Produção</option>
+                        <option value="maintenance">Manutenção</option>
+                        <option value="other">Outro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="closeNotes">💬 Observações (opcional):</label>
+                    <input type="text" id="closeNotes" placeholder="Adicione observações sobre o fechamento...">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal btn-cancel" onclick="closeCloseModal()">Cancelar</button>
+                    <button type="submit" class="btn-modal btn-danger">Fechar OP</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Parada de Máquina -->
+    <div id="stopMachineModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeStopModal()">&times;</span>
+            <div class="modal-header">
+                <h2>🛑 Parada de Máquina</h2>
+                <p>Registre o motivo da parada e anomalia detectada</p>
+            </div>
+            
+            <div class="op-info">
+                <h4>📊 Status Atual da Máquina</h4>
+                <div id="machine-status-info">
+                    <!-- Será preenchido dinamicamente -->
+                </div>
+            </div>
+
+            <form id="stopMachineForm">
+                <div class="form-group">
+                    <label for="stopReason">🚨 Motivo da Parada:</label>
+                    <select id="stopReason" required>
+                        <option value="">Selecione o motivo da parada</option>
+                        <option value="mechanical">Falha Mecânica</option>
+                        <option value="electrical">Falha Elétrica</option>
+                        <option value="tool_wear">Desgaste de Ferramenta</option>
+                        <option value="material_issue">Problema com Material</option>
+                        <option value="quality_issue">Problema de Qualidade</option>
+                        <option value="safety">Questão de Segurança</option>
+                        <option value="maintenance">Manutenção Preventiva</option>
+                        <option value="operator_error">Erro do Operador</option>
+                        <option value="program_error">Erro de Programa</option>
+                        <option value="other">Outro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="stopDescription">📝 Descrição da Anomalia:</label>
+                    <textarea id="stopDescription" rows="3" placeholder="Descreva detalhadamente a anomalia observada..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="stopSeverity">⚠️ Severidade:</label>
+                    <select id="stopSeverity" required>
+                        <option value="">Selecione a severidade</option>
+                        <option value="low">Baixa - Parada rápida</option>
+                        <option value="medium">Média - Requer atenção</option>
+                        <option value="high">Alta - Parada prolongada</option>
+                        <option value="critical">Crítica - Parada de emergência</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="stopOperator">👨‍🔧 Operador Responsável:</label>
+                    <input type="text" id="stopOperator" placeholder="Preenchido automaticamente..." readonly>
+                    <small style="color: #27ae60; font-size: 11px; margin-top: 5px; display: block;">
+                        ✅ Campo preenchido automaticamente com o operador da OP ativa
+                    </small>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal btn-cancel" onclick="closeStopModal()">Cancelar</button>
+                    <button type="submit" class="btn-modal btn-danger">🛑 Parar Máquina</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal do Relatório de Linha do Tempo -->
+    <div id="timelineReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 Relatório de Linha do Tempo</h3>
+                <span class="close" onclick="closeTimelineReport()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="timeline-report-content">
+                    <!-- Conteúdo do relatório será inserido aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="exportTimelineReport()">📥 Exportar</button>
+                <button class="btn btn-secondary" onclick="closeTimelineReport()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de dados das OPs pré-cadastradas
+        const opDatabase = {
+            'OP-001': {
+                code: 'OP-001',
+                description: 'Usinagem de Peça Tipo A',
+                plannedQty: 300,
+                operatorCode: 'OP001',
+                operatorName: 'João Silva',
+                cycleTime: 8, // segundos
+                material: 'Aço Inox 316L',
+                tool: 'Fresa Carbide Ø12mm'
+            },
+            'OP-002': {
+                code: 'OP-002',
+                description: 'Usinagem de Peça Tipo B',
+                plannedQty: 200,
+                operatorCode: 'OP002',
+                operatorName: 'Maria Santos',
+                cycleTime: 12, // segundos
+                material: 'Alumínio 6061',
+                tool: 'Broca HSS Ø8mm'
+            }
+        };
+
+        // Array para armazenar eventos da simulação
+        let simulationEvents = [];
+
+        // Estado da simulação
+        let simulationState = {
+            pallet1Active: false,
+            pallet2Active: false,
+            pallet1InMachine: false,
+            pallet2InMachine: false,
+            pallet1Executing: false,
+            pallet2Executing: false,
+            pallet1Setup: false,
+            pallet2Setup: false,
+            op1Open: false,
+            op2Open: false,
+            op1Production: 0,
+            op2Production: 0,
+            op1Scrap: 0,
+            op2Scrap: 0,
+            op1ProductionTime: 0,
+            op2ProductionTime: 0,
+            currentScenario: 'idle',
+            // Dashboard data (dados da OP ativa)
+            currentOP: '--',
+            activePallet: '--',
+            operatorName: '--',
+            plannedQty: 0,
+            producedQty: 0,
+            scrapQty: 0,
+            productionTime: 0,
+            stopTime: 0,
+            realCycle: 0,
+            machineStatus: 'stopped',
+            startTime: null,
+            // Dados específicos das OPs
+            op1Data: null,
+            op2Data: null,
+            // Operador da máquina (não do palete)
+            machineOperator: null,
+            // Parada de máquina
+            machineStopped: false,
+            stopReason: '',
+            stopDescription: '',
+            stopSeverity: '',
+            stopOperator: '',
+            stopTimestamp: null,
+            stopDuration: 0,
+            // Índices OEE do turno/máquina (não zeram na troca de palete)
+            turnoStartTime: null,
+            turnoProductionTime: 0,
+            turnoStopTime: 0,
+            turnoTotalProduced: 0,
+            turnoTotalScrap: 0,
+            turnoAverageCycle: 0
+        };
+
+        // Função para adicionar log com cores e ícones
+        function addLog(message, type = 'info') {
+            const timestamp = new Date();
+            const time = timestamp.toLocaleTimeString();
+            const log = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry slide-in';
+            
+            // Definir cores baseadas no tipo
+            let logClass = 'log-event';
+            if (message.includes('✅') || message.includes('CONCLUÍDA')) {
+                logClass = 'log-success';
+            } else if (message.includes('⚠️') || message.includes('Nenhuma')) {
+                logClass = 'log-warning';
+            } else if (message.includes('🔒') || message.includes('fechada')) {
+                logClass = 'log-danger';
+            } else if (message.includes('🔧') || message.includes('produzida')) {
+                logClass = 'log-production';
+            }
+            
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${logClass}">${message}</span>`;
+            log.insertBefore(entry, log.firstChild);
+            
+            // Manter apenas os últimos 10 logs
+            while (log.children.length > 10) {
+                log.removeChild(log.lastChild);
+            }
+            
+            // Armazenar evento para relatório
+            simulationEvents.push({
+                timestamp: timestamp,
+                message: message,
+                time: time,
+                type: type
+            });
+        }
+
+        // Função para atualizar dados do dashboard baseado na OP ativa
+        function updateDashboardWithActiveOP() {
+            if (simulationState.pallet1Active && simulationState.op1Data) {
+                // Palete 1 ativo - mostrar dados da OP-001
+                simulationState.currentOP = simulationState.op1Data.code;
+                simulationState.operatorName = simulationState.machineOperator || '--';
+                simulationState.plannedQty = simulationState.op1Data.plannedQty;
+                simulationState.producedQty = simulationState.op1Production;
+                simulationState.scrapQty = simulationState.op1Scrap;
+                simulationState.productionTime = simulationState.op1ProductionTime;
+                simulationState.realCycle = simulationState.op1Data.cycleTime;
+            } else if (simulationState.pallet2Active && simulationState.op2Data) {
+                // Palete 2 ativo - mostrar dados da OP-002
+                simulationState.currentOP = simulationState.op2Data.code;
+                simulationState.operatorName = simulationState.machineOperator || '--';
+                simulationState.plannedQty = simulationState.op2Data.plannedQty;
+                simulationState.producedQty = simulationState.op2Production;
+                simulationState.scrapQty = simulationState.op2Scrap;
+                simulationState.productionTime = simulationState.op2ProductionTime;
+                simulationState.realCycle = simulationState.op2Data.cycleTime;
+            } else {
+                // Nenhum palete ativo ou sem OP
+                simulationState.currentOP = '--';
+                simulationState.operatorName = simulationState.machineOperator || '--';
+                simulationState.plannedQty = 0;
+                simulationState.producedQty = 0;
+                simulationState.scrapQty = 0;
+                simulationState.productionTime = 0;
+                simulationState.realCycle = 0;
+            }
+        }
+
+        // Função para atualizar o dashboard da máquina
+        function updateMachineDashboard() {
+            // Atualizar dados baseado na OP ativa
+            updateDashboardWithActiveOP();
+            // Atualizar status da máquina
+            const statusIcon = document.getElementById('machine-status-icon');
+            const statusSymbol = document.getElementById('status-symbol');
+            const statusText = document.getElementById('machine-status-text');
+            const machineHeader = document.querySelector('.machine-header');
+            
+            // Verificar se máquina está parada por anomalia
+            if (simulationState.machineStopped) {
+                statusIcon.className = 'status-icon stopped';
+                statusSymbol.textContent = '🛑';
+                statusText.textContent = 'PARADA POR ANOMALIA';
+                simulationState.machineStatus = 'stopped';
+                machineHeader.className = 'machine-header status-stopped';
+            } else if (simulationState.pallet1Setup || simulationState.pallet2Setup) {
+                // Palete em SETUP
+                statusIcon.className = 'status-icon setup';
+                statusSymbol.textContent = '⚙️';
+                statusText.textContent = 'Em Setup';
+                simulationState.machineStatus = 'setup';
+                machineHeader.className = 'machine-header status-setup';
+            } else if (simulationState.pallet1Executing || simulationState.pallet2Executing) {
+                // Palete em produção
+                statusIcon.className = 'status-icon production';
+                statusSymbol.textContent = '▶️';
+                statusText.textContent = 'Em Produção';
+                simulationState.machineStatus = 'production';
+                machineHeader.className = 'machine-header status-production';
+            } else if (simulationState.pallet1Active || simulationState.pallet2Active) {
+                // Palete ativo mas sem OP - Fora de Produção
+                statusIcon.className = 'status-icon stopped';
+                statusSymbol.textContent = '⏸️';
+                statusText.textContent = 'Fora de Produção';
+                simulationState.machineStatus = 'stopped';
+                machineHeader.className = 'machine-header status-stopped';
+            } else if (simulationState.op1Open || simulationState.op2Open) {
+                statusIcon.className = 'status-icon waiting';
+                statusSymbol.textContent = '⏸️';
+                statusText.textContent = 'Aguardando';
+                simulationState.machineStatus = 'waiting';
+                machineHeader.className = 'machine-header status-waiting';
+            } else {
+                // Máquina sem OP - Fora de Produção (cinza claro)
+                statusIcon.className = 'status-icon stopped';
+                statusSymbol.textContent = '⏸️';
+                statusText.textContent = 'Fora de Produção';
+                simulationState.machineStatus = 'idle';
+                machineHeader.className = 'machine-header status-idle';
+            }
+
+            // Atualizar timer - só conta quando realmente em produção
+            if (simulationState.startTime && simulationState.machineStatus === 'production') {
+                const now = new Date();
+                const diff = Math.floor((now - simulationState.startTime) / 1000);
+                const hours = Math.floor(diff / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+                const seconds = diff % 60;
+                document.getElementById('machine-timer').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                // Parar timer quando não está em produção
+                if (simulationState.startTime && simulationState.machineStatus !== 'production') {
+                    simulationState.startTime = null; // Reset timer
+                }
+                document.getElementById('machine-timer').textContent = '00:00:00';
+            }
+
+            // Atualizar informações da OP
+            document.getElementById('current-op').textContent = simulationState.currentOP;
+            document.getElementById('current-op-display').textContent = simulationState.currentOP !== '--' ? simulationState.currentOP : 'N/a';
+            document.getElementById('operator-name').textContent = simulationState.operatorName;
+            document.getElementById('planned-qty').textContent = simulationState.plannedQty;
+            document.getElementById('produced-qty').textContent = simulationState.producedQty;
+            document.getElementById('pending-qty').textContent = simulationState.plannedQty - simulationState.producedQty;
+            document.getElementById('scrap-qty').textContent = simulationState.scrapQty;
+
+            // Atualizar barra de progresso
+            const progressPercentage = simulationState.plannedQty > 0 ? 
+                Math.round((simulationState.producedQty / simulationState.plannedQty) * 100) : 0;
+            document.getElementById('progress-percentage').textContent = `${progressPercentage}%`;
+            
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${progressPercentage}%`;
+            
+            // Mudar cor da barra baseada no progresso
+            if (progressPercentage >= 100) {
+                progressBar.style.background = '#27ae60'; // Verde - concluído
+            } else if (progressPercentage >= 75) {
+                progressBar.style.background = '#f39c12'; // Laranja - quase pronto
+            } else if (progressPercentage >= 50) {
+                progressBar.style.background = '#3498db'; // Azul - em andamento
+            } else {
+                progressBar.style.background = '#e74c3c'; // Vermelho - início
+            }
+
+            // Atualizar tempos
+            const prodTime = Math.floor(simulationState.productionTime / 1000);
+            const prodHours = Math.floor(prodTime / 3600);
+            const prodMinutes = Math.floor((prodTime % 3600) / 60);
+            const prodSeconds = prodTime % 60;
+            document.getElementById('prod-time').textContent = 
+                `${prodHours.toString().padStart(2, '0')}:${prodMinutes.toString().padStart(2, '0')}:${prodSeconds.toString().padStart(2, '0')}`;
+
+            const stopTime = Math.floor(simulationState.stopTime / 1000);
+            const stopHours = Math.floor(stopTime / 3600);
+            const stopMinutes = Math.floor((stopTime % 3600) / 60);
+            const stopSeconds = stopTime % 60;
+            document.getElementById('stop-time').textContent = 
+                `${stopHours.toString().padStart(2, '0')}:${stopMinutes.toString().padStart(2, '0')}:${stopSeconds.toString().padStart(2, '0')}`;
+
+            document.getElementById('real-cycle').textContent = simulationState.realCycle > 0 ? `${simulationState.realCycle}s` : '0s';
+
+            // Atualizar indicadores dos paletes
+            updatePalletIndicators();
+
+            // Calcular e atualizar métricas OEE
+            updateOEEMetrics();
+        }
+
+        // Função para atualizar indicadores dos paletes
+        function updatePalletIndicators() {
+            const pallet1Indicator = document.getElementById('pallet1-indicator');
+            const pallet2Indicator = document.getElementById('pallet2-indicator');
+            const pallet1Status = document.getElementById('pallet1-status');
+            const pallet2Status = document.getElementById('pallet2-status');
+            
+            // Reset classes
+            pallet1Indicator.className = 'pallet-indicator';
+            pallet2Indicator.className = 'pallet-indicator';
+            
+            // Palete 1
+            if (simulationState.pallet1Active && simulationState.pallet1InMachine) {
+                pallet1Indicator.classList.add('in-machine');
+                pallet1Status.textContent = 'P1';
+            } else if (simulationState.op1Open) {
+                // Tem OP mas não está na máquina
+                pallet1Indicator.classList.add('op-waiting');
+                pallet1Status.textContent = simulationState.op1Data ? simulationState.op1Data.code : 'P1';
+            } else {
+                pallet1Status.textContent = 'P1';
+            }
+            
+            // Palete 2
+            if (simulationState.pallet2Active && simulationState.pallet2InMachine) {
+                pallet2Indicator.classList.add('in-machine');
+                pallet2Status.textContent = 'P2';
+            } else if (simulationState.op2Open) {
+                // Tem OP mas não está na máquina
+                pallet2Indicator.classList.add('op-waiting');
+                pallet2Status.textContent = simulationState.op2Data ? simulationState.op2Data.code : 'P2';
+            } else {
+                pallet2Status.textContent = 'P2';
+            }
+        }
+
+        // Função para calcular métricas OEE do turno/máquina
+        function updateOEEMetrics() {
+            // Usar dados do turno em vez dos dados da OP ativa
+            const totalTime = simulationState.turnoProductionTime + simulationState.turnoStopTime;
+            const availability = totalTime > 0 ? Math.round((simulationState.turnoProductionTime / totalTime) * 100) : 0;
+            
+            // Performance baseada no ciclo médio do turno
+            const performance = simulationState.turnoAverageCycle > 0 ? 
+                Math.min(100, Math.round((1000 / simulationState.turnoAverageCycle) * 100)) : 0;
+            
+            // Qualidade baseada no total produzido vs scrap do turno
+            const quality = simulationState.turnoTotalProduced > 0 ? 
+                Math.round(((simulationState.turnoTotalProduced - simulationState.turnoTotalScrap) / simulationState.turnoTotalProduced) * 100) : 0;
+            
+            const oee = Math.round((availability * performance * quality) / 10000);
+
+            // Atualizar valores com cores
+            updateMetricValue('oee-value', oee, '%');
+            updateMetricValue('availability-value', availability, '%');
+            updateMetricValue('performance-value', performance, '%');
+            updateMetricValue('quality-value', quality, '%');
+        }
+
+        // Função para atualizar valores das métricas com cores
+        function updateMetricValue(elementId, value, unit = '') {
+            const element = document.getElementById(elementId);
+            const itemElement = document.getElementById(elementId.replace('-value', '-item'));
+            element.textContent = value + unit;
+            
+            // Reset classes
+            itemElement.className = 'metric-item';
+            
+            if (value >= 80) {
+                itemElement.classList.add('good');
+            } else if (value >= 60) {
+                itemElement.classList.add('warning');
+            } else {
+                itemElement.classList.add('danger');
+            }
+        }
+
+        // Funções do Modal de Abertura de OP
+        function openOPModal() {
+            document.getElementById('opModal').style.display = 'block';
+            // Limpar formulário
+            document.getElementById('opForm').reset();
+            // Atualizar status dos paletes no modal
+            updateModalPalletStatus();
+            // Atualizar display do operador atual
+            updateOperatorDisplay();
+            // Focar no primeiro campo
+            document.getElementById('opNumber').focus();
+        }
+
+        // Função para atualizar display do operador atual
+        function updateOperatorDisplay() {
+            const operatorDisplay = document.getElementById('current-operator-display');
+            const changeBtn = document.getElementById('change-operator-btn');
+            const operatorInput = document.getElementById('operatorCode');
+            
+            if (simulationState.machineOperator) {
+                operatorDisplay.textContent = simulationState.machineOperator;
+                operatorDisplay.style.background = '#e8f5e8';
+                operatorDisplay.style.borderColor = '#27ae60';
+                operatorDisplay.style.color = '#27ae60';
+                changeBtn.textContent = '🔄 Trocar';
+                changeBtn.style.display = 'inline-block';
+            } else {
+                operatorDisplay.textContent = 'Nenhum operador definido';
+                operatorDisplay.style.background = '#e8f4fd';
+                operatorDisplay.style.borderColor = '#3498db';
+                operatorDisplay.style.color = '#3498db';
+                changeBtn.textContent = '➕ Definir';
+                changeBtn.style.display = 'inline-block';
+            }
+            
+            // Esconder input por padrão
+            operatorInput.style.display = 'none';
+        }
+
+        // Função para trocar operador da máquina
+        function changeMachineOperator() {
+            const operatorInput = document.getElementById('operatorCode');
+            const changeBtn = document.getElementById('change-operator-btn');
+            
+            if (operatorInput.style.display === 'none') {
+                // Mostrar campo de input
+                operatorInput.style.display = 'block';
+                operatorInput.focus();
+                changeBtn.textContent = '✅ Confirmar';
+                changeBtn.style.background = '#27ae60';
+            } else {
+                // Confirmar troca
+                const newOperator = operatorInput.value.trim();
+                if (!newOperator) {
+                    showNotification('⚠️ Por favor, digite o código do operador.', 'warning');
+                    operatorInput.focus();
+                    return;
+                }
+                
+                // Trocar operador da máquina
+                const oldOperator = simulationState.machineOperator;
+                simulationState.machineOperator = newOperator;
+                
+                // Atualizar dashboard se há OP ativa
+                updateMachineDashboard();
+                
+                // Esconder input
+                operatorInput.style.display = 'none';
+                operatorInput.value = '';
+                
+                // Atualizar display
+                updateOperatorDisplay();
+                
+                // Log da troca
+                if (oldOperator) {
+                    addLog(`🔄 Operador da máquina trocado: ${oldOperator} → ${newOperator}`);
+                    showNotification(`✅ Operador trocado: ${oldOperator} → ${newOperator}`, 'success');
+                } else {
+                    addLog(`👨‍🔧 Operador da máquina definido: ${newOperator}`);
+                    showNotification(`✅ Operador definido: ${newOperator}`, 'success');
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('opModal').style.display = 'none';
+        }
+
+        // Função para atualizar status dos paletes no modal
+        function updateModalPalletStatus() {
+            // Palete 1
+            const p1Indicator = document.getElementById('modal-p1-indicator');
+            const p1Text = document.getElementById('modal-p1-text');
+            
+            // Palete 2
+            const p2Indicator = document.getElementById('modal-p2-indicator');
+            const p2Text = document.getElementById('modal-p2-text');
+            
+            // Reset classes
+            p1Indicator.className = 'pallet-status-indicator';
+            p2Indicator.className = 'pallet-status-indicator';
+            
+            // Status do Palete 1
+            if (simulationState.op1Open) {
+                p1Indicator.classList.add('occupied');
+                p1Text.textContent = `OP: ${simulationState.currentOP} (Operador: ${simulationState.operatorName})`;
+            } else {
+                p1Indicator.classList.add('available');
+                p1Text.textContent = 'Disponível';
+            }
+            
+            // Status do Palete 2
+            if (simulationState.op2Open) {
+                p2Indicator.classList.add('occupied');
+                p2Text.textContent = `OP: ${simulationState.currentOP} (Operador: ${simulationState.operatorName})`;
+            } else {
+                p2Indicator.classList.add('available');
+                p2Text.textContent = 'Disponível';
+            }
+        }
+
+        // Fechar modais ao clicar fora deles
+        window.onclick = function(event) {
+            const opModal = document.getElementById('opModal');
+            const closeOPModal = document.getElementById('closeOPModal');
+            const stopMachineModal = document.getElementById('stopMachineModal');
+            
+            if (event.target === opModal) {
+                closeModal();
+            }
+            
+            if (event.target === closeOPModal) {
+                closeCloseModal();
+            }
+            
+            if (event.target === stopMachineModal) {
+                closeStopModal();
+            }
+        }
+
+        // Processar formulário de abertura de OP com validações melhoradas
+        function processOPOpening() {
+            const opNumber = document.getElementById('opNumber').value.trim();
+            const palletSelect = document.getElementById('palletSelect').value;
+
+            // Validações melhoradas
+            if (!opNumber) {
+                showNotification('⚠️ Por favor, digite o número da OP.', 'warning');
+                document.getElementById('opNumber').focus();
+                return false;
+            }
+
+            // Validar formato da OP
+            if (!opNumber.match(/^OP-\d{3,}$/i)) {
+                showNotification('⚠️ Formato inválido. Use: OP-001, OP-002, etc.', 'warning');
+                document.getElementById('opNumber').focus();
+                return false;
+            }
+
+            if (!palletSelect) {
+                showNotification('⚠️ Por favor, selecione um palete.', 'warning');
+                document.getElementById('palletSelect').focus();
+                return false;
+            }
+
+            // Verificar se já existe operador da máquina
+            if (!simulationState.machineOperator) {
+                showNotification('⚠️ Por favor, defina um operador da máquina primeiro.', 'warning');
+                document.getElementById('change-operator-btn').click();
+                return false;
+            }
+
+            // Verificar se já existe OP aberta no palete selecionado
+            const palletNum = parseInt(palletSelect);
+            if ((palletNum === 1 && simulationState.op1Open) || (palletNum === 2 && simulationState.op2Open)) {
+                showNotification(`⚠️ Já existe uma OP aberta no Palete ${palletNum}. Feche a OP atual antes de abrir uma nova.`, 'warning');
+                return false;
+            }
+
+            // Processar abertura da OP (usar operador da máquina)
+            if (palletNum === 1) {
+                startOP1WithData(opNumber, simulationState.machineOperator);
+                showNotification(`✅ OP ${opNumber} aberta com sucesso no Palete 1!`, 'success');
+            } else {
+                startOP2WithData(opNumber, simulationState.machineOperator);
+                showNotification(`✅ OP ${opNumber} aberta com sucesso no Palete 2!`, 'success');
+            }
+
+            // Fechar modal
+            closeModal();
+            return true;
+        }
+
+        // Função para mostrar notificações
+        function showNotification(message, type = 'info', duration = 3000) {
+            // Criar elemento de notificação
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = message;
+            
+            // Adicionar estilos
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            
+            // Definir cores baseadas no tipo
+            switch(type) {
+                case 'success':
+                    notification.style.background = '#27ae60';
+                    break;
+                case 'warning':
+                    notification.style.background = '#f39c12';
+                    break;
+                case 'error':
+                    notification.style.background = '#e74c3c';
+                    break;
+                default:
+                    notification.style.background = '#3498db';
+            }
+            
+            // Adicionar ao DOM
+            document.body.appendChild(notification);
+            
+            // Remover após duração especificada
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+            
+            // Retornar elemento para permitir atualização
+            return notification;
+        }
+
+        // Função para fechar OP
+        function closeOP(palletNumber) {
+            if (palletNumber === 1 && simulationState.op1Open) {
+                simulationState.op1Open = false;
+                simulationState.pallet1Active = false;
+                simulationState.pallet1InMachine = false;
+                simulationState.pallet1Executing = false;
+                
+                // Reset dados se era a OP ativa
+                if (simulationState.activePallet === 'P1') {
+                    simulationState.currentOP = '--';
+                    simulationState.activePallet = '--';
+                    simulationState.operatorName = '--';
+                    simulationState.startTime = null;
+                }
+                
+                updateSignals(1, false, false, false);
+                updatePallets();
+                updateMachineDashboard();
+                addLog(`🔒 OP fechada no Palete 1 - Produção finalizada`);
+                
+            } else if (palletNumber === 2 && simulationState.op2Open) {
+                simulationState.op2Open = false;
+            simulationState.pallet2Active = false;
+            simulationState.pallet2InMachine = false;
+            simulationState.pallet2Executing = false;
+            
+                // Reset dados se era a OP ativa
+                if (simulationState.activePallet === 'P2') {
+                    simulationState.currentOP = '--';
+                    simulationState.activePallet = '--';
+                    simulationState.operatorName = '--';
+                    simulationState.startTime = null;
+                }
+                
+                updateSignals(2, false, false, false);
+                updatePallets();
+            updateMachineDashboard();
+                addLog(`🔒 OP fechada no Palete 2 - Produção finalizada`);
+                
+            } else {
+                addLog(`⚠️ Nenhuma OP aberta no Palete ${palletNumber} para fechar`);
+            }
+        }
+
+        // Funções do Modal de Fechamento de OP
+        function openCloseOPModal() {
+            // Verificar se há OPs abertas
+            if (!simulationState.op1Open && !simulationState.op2Open) {
+                showNotification('⚠️ Nenhuma OP aberta para fechar', 'warning');
+                addLog('⚠️ Tentativa de fechar OP - Nenhuma OP aberta');
+                return;
+            }
+
+            document.getElementById('closeOPModal').style.display = 'block';
+            
+            // Atualizar lista de OPs ativas
+            updateActiveOpsList();
+            
+            // Atualizar opções de palete disponíveis
+            updateClosePalletOptions();
+            
+            // Limpar formulário
+            document.getElementById('closeOPForm').reset();
+            
+            // Focar no primeiro campo
+            document.getElementById('closePalletSelect').focus();
+        }
+
+        function closeCloseModal() {
+            document.getElementById('closeOPModal').style.display = 'none';
+        }
+
+        // Atualizar lista de OPs ativas no modal
+        function updateActiveOpsList() {
+            const activeOpsList = document.getElementById('active-ops-list');
+            let html = '';
+            
+            if (simulationState.op1Open) {
+                html += `
+                    <div style="background: #e8f4fd; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #3498db;">
+                        <strong>Palete 1:</strong> ${simulationState.currentOP} (Operador: ${simulationState.operatorName})<br>
+                        <small>Status: ${simulationState.pallet1Active ? 'Ativo' : 'Inativo'} | Produzido: ${simulationState.op1Production}</small>
+                    </div>
+                `;
+            }
+            
+            if (simulationState.op2Open) {
+                html += `
+                    <div style="background: #e8f4fd; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #3498db;">
+                        <strong>Palete 2:</strong> ${simulationState.currentOP} (Operador: ${simulationState.operatorName})<br>
+                        <small>Status: ${simulationState.pallet2Active ? 'Ativo' : 'Inativo'} | Produzido: ${simulationState.op2Production}</small>
+                    </div>
+                `;
+            }
+            
+            if (!html) {
+                html = '<p style="color: #7f8c8d; font-style: italic;">Nenhuma OP ativa</p>';
+            }
+            
+            activeOpsList.innerHTML = html;
+        }
+
+        // Atualizar opções de palete disponíveis para fechamento
+        function updateClosePalletOptions() {
+            const pallet1Option = document.getElementById('close-pallet1-option');
+            const pallet2Option = document.getElementById('close-pallet2-option');
+            
+            // Palete 1
+            if (simulationState.op1Open) {
+                pallet1Option.style.display = 'block';
+                pallet1Option.textContent = `Palete 1 (P1) - ${simulationState.currentOP}`;
+                pallet1Option.disabled = false;
+            } else {
+                pallet1Option.style.display = 'none';
+                pallet1Option.disabled = true;
+            }
+            
+            // Palete 2
+            if (simulationState.op2Open) {
+                pallet2Option.style.display = 'block';
+                pallet2Option.textContent = `Palete 2 (P2) - ${simulationState.currentOP}`;
+                pallet2Option.disabled = false;
+            } else {
+                pallet2Option.style.display = 'none';
+                pallet2Option.disabled = true;
+            }
+        }
+
+        // Processar fechamento de OP
+        function processOPClosing() {
+            const palletSelect = document.getElementById('closePalletSelect').value;
+            const closeReason = document.getElementById('closeReason').value;
+            const closeNotes = document.getElementById('closeNotes').value.trim();
+
+            // Validações
+            if (!palletSelect) {
+                showNotification('⚠️ Por favor, selecione um palete para fechar.', 'warning');
+                document.getElementById('closePalletSelect').focus();
+                return false;
+            }
+
+            if (!closeReason) {
+                showNotification('⚠️ Por favor, selecione o motivo do fechamento.', 'warning');
+                document.getElementById('closeReason').focus();
+                return false;
+            }
+
+            const palletNum = parseInt(palletSelect);
+            
+            // Verificar se o palete selecionado tem OP aberta
+            if ((palletNum === 1 && !simulationState.op1Open) || (palletNum === 2 && !simulationState.op2Open)) {
+                showNotification(`⚠️ Não há OP aberta no Palete ${palletNum}.`, 'warning');
+                return false;
+            }
+
+            // Processar fechamento
+            const reasonText = {
+                'completed': 'Produção Concluída',
+                'cancelled': 'OP Cancelada',
+                'error': 'Erro na Produção',
+                'maintenance': 'Manutenção',
+                'other': 'Outro'
+            };
+
+            const notesText = closeNotes ? ` - ${closeNotes}` : '';
+            const reasonDisplay = reasonText[closeReason] + notesText;
+            
+            closeOPWithReason(palletNum, closeReason, reasonDisplay);
+            
+            // Fechar modal
+            closeCloseModal();
+            return true;
+        }
+
+        // Função para fechar OP com motivo específico
+        function closeOPWithReason(palletNumber, reason, reasonDisplay) {
+            if (palletNumber === 1 && simulationState.op1Open) {
+                simulationState.op1Open = false;
+            simulationState.pallet1Active = false;
+            simulationState.pallet1InMachine = false;
+            simulationState.pallet1Executing = false;
+                
+                // Reset dados se era a OP ativa
+                if (simulationState.activePallet === 'P1') {
+                    simulationState.activePallet = '--';
+                    simulationState.startTime = null;
+                }
+                
+                // Limpar dados específicos da OP
+                simulationState.op1Data = null;
+                
+                updateSignals(1, false, false, false);
+                updatePallets();
+                updateMachineDashboard();
+                
+                addLog(`🔒 OP fechada no Palete 1 - Motivo: ${reasonDisplay}`);
+                showNotification(`✅ OP fechada no Palete 1 - ${reasonDisplay}`, 'success');
+                
+            } else if (palletNumber === 2 && simulationState.op2Open) {
+                simulationState.op2Open = false;
+                simulationState.pallet2Active = false;
+                simulationState.pallet2InMachine = false;
+                simulationState.pallet2Executing = false;
+                
+                // Reset dados se era a OP ativa
+                if (simulationState.activePallet === 'P2') {
+                    simulationState.activePallet = '--';
+                    simulationState.startTime = null;
+                }
+                
+                // Limpar dados específicos da OP
+                simulationState.op2Data = null;
+                
+                updateSignals(2, false, false, false);
+                updatePallets();
+                updateMachineDashboard();
+                
+                addLog(`🔒 OP fechada no Palete 2 - Motivo: ${reasonDisplay}`);
+                showNotification(`✅ OP fechada no Palete 2 - ${reasonDisplay}`, 'success');
+                
+            } else {
+                addLog(`⚠️ Nenhuma OP aberta no Palete ${palletNumber} para fechar`);
+                showNotification(`⚠️ Nenhuma OP aberta no Palete ${palletNumber}`, 'warning');
+            }
+        }
+
+        // Função para fechar OP manualmente (mantida para compatibilidade)
+        function closeCurrentOP() {
+            if (simulationState.op1Open && simulationState.pallet1Active) {
+                closeOP(1);
+            } else if (simulationState.op2Open && simulationState.pallet2Active) {
+                closeOP(2);
+            } else {
+                addLog('⚠️ Nenhuma OP ativa para fechar');
+            }
+        }
+
+        // Funções do Modal de Parada de Máquina
+        function openStopMachineModal() {
+            // Verificar se a máquina já está parada
+            if (simulationState.machineStopped) {
+                showNotification('⚠️ Máquina já está parada', 'warning');
+                addLog('⚠️ Tentativa de parar máquina - Máquina já parada');
+                return;
+            }
+
+            // Verificar se há OP ativa
+            if (!simulationState.op1Open && !simulationState.op2Open) {
+                showNotification('⚠️ Nenhuma OP ativa para parar', 'warning');
+                addLog('⚠️ Tentativa de parar máquina - Nenhuma OP ativa');
+                return;
+            }
+
+            // Iniciar timer de 10 segundos
+            startStopTimer();
+        }
+
+        // Função para iniciar timer de parada
+        function startStopTimer() {
+            let countdown = 10;
+            
+            // Mostrar notificação de timer
+            const timerNotification = showNotification(`⏱️ Parando máquina em ${countdown} segundos...`, 'info', 12000);
+            
+            // Atualizar timer a cada segundo
+            const timerInterval = setInterval(() => {
+                countdown--;
+                
+                if (countdown > 0) {
+                    // Atualizar notificação
+                    timerNotification.innerHTML = `⏱️ Parando máquina em ${countdown} segundos...`;
+                } else {
+                    // Timer finalizado - abrir modal
+                    clearInterval(timerInterval);
+                    openStopModalAfterTimer();
+                }
+            }, 1000);
+        }
+
+        // Função para abrir modal após timer
+        function openStopModalAfterTimer() {
+            document.getElementById('stopMachineModal').style.display = 'block';
+            
+            // Atualizar informações de status da máquina
+            updateMachineStatusInfo();
+            
+            // Limpar formulário
+            document.getElementById('stopMachineForm').reset();
+            
+            // Preencher automaticamente o operador
+            autoFillOperator();
+            
+            // Focar no primeiro campo
+            document.getElementById('stopReason').focus();
+        }
+
+        function closeStopModal() {
+            document.getElementById('stopMachineModal').style.display = 'none';
+        }
+
+        // Função para preencher automaticamente o operador
+        function autoFillOperator() {
+            const operatorField = document.getElementById('stopOperator');
+            
+            // Determinar qual operador está ativo
+            if (simulationState.pallet1Active && simulationState.op1Data) {
+                operatorField.value = simulationState.op1Data.operatorName;
+            } else if (simulationState.pallet2Active && simulationState.op2Data) {
+                operatorField.value = simulationState.op2Data.operatorName;
+            } else {
+                operatorField.value = 'Operador não identificado';
+            }
+            
+            // Marcar campo como preenchido automaticamente
+            operatorField.style.backgroundColor = '#e8f5e8';
+            operatorField.style.borderColor = '#27ae60';
+            
+            // Adicionar tooltip indicando preenchimento automático
+            operatorField.title = 'Preenchido automaticamente com o operador da OP ativa';
+        }
+
+        // Atualizar informações de status da máquina no modal
+        function updateMachineStatusInfo() {
+            const statusInfo = document.getElementById('machine-status-info');
+            let html = '';
+            
+            // Status geral da máquina
+            html += `
+                <div style="background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #17a2b8;">
+                    <strong>Status:</strong> ${simulationState.machineStatus === 'production' ? 'Em Produção' : 'Fora de Produção'}<br>
+                    <strong>Palete Ativo:</strong> ${simulationState.activePallet}<br>
+                    <strong>OP Atual:</strong> ${simulationState.currentOP}<br>
+                    <strong>Operador:</strong> ${simulationState.operatorName}
+                </div>
+            `;
+            
+            // Informações de produção
+            if (simulationState.currentOP !== '--') {
+                html += `
+                    <div style="background: #e8f4fd; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #3498db;">
+                        <strong>Produção:</strong> ${simulationState.producedQty}/${simulationState.plannedQty} peças<br>
+                        <strong>Tempo de Produção:</strong> ${Math.floor(simulationState.productionTime / 1000)}s<br>
+                        <strong>Ciclo Real:</strong> ${simulationState.realCycle}s
+                    </div>
+                `;
+            }
+            
+            statusInfo.innerHTML = html;
+        }
+
+        // Processar parada de máquina
+        function processMachineStop() {
+            const stopReason = document.getElementById('stopReason').value;
+            const stopDescription = document.getElementById('stopDescription').value.trim();
+            const stopSeverity = document.getElementById('stopSeverity').value;
+            const stopOperator = document.getElementById('stopOperator').value.trim();
+
+            // Validações
+            if (!stopReason) {
+                showNotification('⚠️ Por favor, selecione o motivo da parada.', 'warning');
+                document.getElementById('stopReason').focus();
+                return false;
+            }
+
+            if (!stopDescription) {
+                showNotification('⚠️ Por favor, descreva a anomalia observada.', 'warning');
+                document.getElementById('stopDescription').focus();
+                return false;
+            }
+
+            if (!stopSeverity) {
+                showNotification('⚠️ Por favor, selecione a severidade da parada.', 'warning');
+                document.getElementById('stopSeverity').focus();
+                return false;
+            }
+
+            // Operador é preenchido automaticamente, mas validar se está presente
+            if (!stopOperator || stopOperator === 'Operador não identificado') {
+                showNotification('⚠️ Erro: Operador não identificado. Feche e tente novamente.', 'error');
+                return false;
+            }
+
+            // Processar parada
+            stopMachineWithReason(stopReason, stopDescription, stopSeverity, stopOperator);
+            
+            // Fechar modal
+            closeStopModal();
+            return true;
+        }
+
+        // Função para parar máquina com motivo específico
+        function stopMachineWithReason(reason, description, severity, operator) {
+            // Registrar parada
+            simulationState.machineStopped = true;
+            simulationState.stopReason = reason;
+            simulationState.stopDescription = description;
+            simulationState.stopSeverity = severity;
+            simulationState.stopOperator = operator;
+            simulationState.stopTimestamp = new Date();
+            
+            // Parar produção
+            simulationState.pallet1Executing = false;
+            simulationState.pallet2Executing = false;
+            simulationState.machineStatus = 'stopped';
+            
+            // Atualizar dashboard
+            updateMachineDashboard();
+            
+            // Atualizar botões de controle
+            updateControlButtons();
+            
+            // Log da parada
+            const reasonText = {
+                'mechanical': 'Falha Mecânica',
+                'electrical': 'Falha Elétrica',
+                'tool_wear': 'Desgaste de Ferramenta',
+                'material_issue': 'Problema com Material',
+                'quality_issue': 'Problema de Qualidade',
+                'safety': 'Questão de Segurança',
+                'maintenance': 'Manutenção Preventiva',
+                'operator_error': 'Erro do Operador',
+                'program_error': 'Erro de Programa',
+                'other': 'Outro'
+            };
+            
+            const severityText = {
+                'low': 'Baixa',
+                'medium': 'Média',
+                'high': 'Alta',
+                'critical': 'Crítica'
+            };
+            
+            const reasonDisplay = reasonText[reason] || reason;
+            const severityDisplay = severityText[severity] || severity;
+            
+            addLog(`🛑 MÁQUINA PARADA - Motivo: ${reasonDisplay} | Severidade: ${severityDisplay} | Operador: ${operator}`);
+            addLog(`📝 Descrição: ${description}`);
+            
+            showNotification(`🛑 Máquina parada por ${reasonDisplay} (${severityDisplay})`, 'error');
+        }
+
+        // Função para retomar máquina
+        function resumeMachine() {
+            if (!simulationState.machineStopped) {
+                showNotification('⚠️ Máquina não está parada', 'warning');
+                return;
+            }
+            
+            // Calcular tempo de parada
+            if (simulationState.stopTimestamp) {
+                const now = new Date();
+                simulationState.stopDuration = Math.floor((now - simulationState.stopTimestamp) / 1000);
+                simulationState.stopTime += simulationState.stopDuration * 1000;
+                
+                // Acumular tempo de parada no turno
+                simulationState.turnoStopTime += simulationState.stopDuration * 1000;
+            }
+            
+            // Reset parada
+            simulationState.machineStopped = false;
+            simulationState.stopReason = '';
+            simulationState.stopDescription = '';
+            simulationState.stopSeverity = '';
+            simulationState.stopOperator = '';
+            simulationState.stopTimestamp = null;
+            simulationState.stopDuration = 0;
+            
+            // Retomar produção se havia palete ativo
+            if (simulationState.pallet1Active && simulationState.op1Open) {
+                simulationState.pallet1Executing = true;
+                simulationState.machineStatus = 'production';
+                simulationState.startTime = new Date();
+            } else if (simulationState.pallet2Active && simulationState.op2Open) {
+            simulationState.pallet2Executing = true;
+                simulationState.machineStatus = 'production';
+                simulationState.startTime = new Date();
+            }
+            
+            updateMachineDashboard();
+            
+            // Atualizar botões de controle
+            updateControlButtons();
+            
+            addLog(`▶️ MÁQUINA RETOMADA - Tempo de parada: ${simulationState.stopDuration}s`);
+            showNotification('▶️ Máquina retomada com sucesso!', 'success');
+        }
+
+        // Função para atualizar botões de controle baseado no status
+        function updateControlButtons() {
+            const stopBtn = document.getElementById('stop-machine-btn');
+            const resumeBtn = document.getElementById('resume-machine-btn');
+            
+            if (simulationState.machineStopped) {
+                stopBtn.style.display = 'none';
+                resumeBtn.style.display = 'inline-block';
+            } else {
+                stopBtn.style.display = 'inline-block';
+                resumeBtn.style.display = 'none';
+            }
+        }
+
+        // Funções modificadas para aceitar dados do formulário
+        function startOP1WithData(opNumber, operatorCode) {
+            simulationState.op1Open = true;
+            
+            // Carregar dados da OP do banco de dados
+            simulationState.op1Data = opDatabase[opNumber];
+            
+            // Sobrescrever o nome do operador com o que foi preenchido no formulário
+            simulationState.op1Data.operatorName = operatorCode;
+            
+            // Verificar se há algum palete na máquina
+            const hasPalletInMachine = simulationState.pallet1InMachine || simulationState.pallet2InMachine;
+            
+            if (!hasPalletInMachine) {
+                // Máquina vazia - P1 entra na máquina em SETUP
+                simulationState.pallet1InMachine = true;
+                simulationState.pallet1Active = true;
+                simulationState.pallet1Setup = true;
+                simulationState.pallet1Executing = false;
+                simulationState.activePallet = 'P1';
+            simulationState.startTime = new Date();
+                addLog(`${opNumber} aberta no Palete 1 - Operador: ${operatorCode} - Entrou na máquina em SETUP`);
+            } else {
+                // Máquina ocupada - P1 fica fora da máquina em espera
+                simulationState.pallet1Active = false;
+                simulationState.pallet1Setup = false;
+                simulationState.pallet1Executing = false;
+                addLog(`${opNumber} aberta no Palete 1 - Operador: ${operatorCode} - Aguardando troca de palete`);
+            }
+            
+            // Atualizar dashboard imediatamente
+            updateMachineDashboard();
+            
+            // Atualizar sinais baseado no status real do palete
+            updateSignals(1, simulationState.pallet1InMachine, simulationState.pallet1Executing, false);
+            updatePallets();
+        }
+
+        function startOP2WithData(opNumber, operatorCode) {
+            simulationState.op2Open = true;
+            
+            // Carregar dados da OP do banco de dados
+            simulationState.op2Data = opDatabase[opNumber];
+            
+            // Sobrescrever o nome do operador com o que foi preenchido no formulário
+            simulationState.op2Data.operatorName = operatorCode;
+            
+            // Verificar se há algum palete na máquina
+            const hasPalletInMachine = simulationState.pallet1InMachine || simulationState.pallet2InMachine;
+            
+            if (!hasPalletInMachine) {
+                // Máquina vazia - P2 entra na máquina em SETUP
+                simulationState.pallet2InMachine = true;
+                simulationState.pallet2Active = true;
+                simulationState.pallet2Setup = true;
+                simulationState.pallet2Executing = false;
+                simulationState.activePallet = 'P2';
+                simulationState.startTime = new Date();
+                addLog(`${opNumber} aberta no Palete 2 - Operador: ${operatorCode} - Entrou na máquina em SETUP`);
+            } else {
+                // Máquina ocupada - P2 fica fora da máquina em espera
+                simulationState.pallet2Active = false;
+                simulationState.pallet2Setup = false;
+                simulationState.pallet2Executing = false;
+                addLog(`${opNumber} aberta no Palete 2 - Operador: ${operatorCode} - Aguardando troca de palete`);
+            }
+            
+            // Atualizar dashboard imediatamente
+            updateMachineDashboard();
+            
+            // Atualizar sinais baseado no status real do palete
+            updateSignals(2, simulationState.pallet2InMachine, simulationState.pallet2Executing, false);
+            updatePallets();
+        }
+
+        // Função para atualizar sinais
+        function updateSignals(pallet, machine, executing, ready) {
+            const prefix = pallet === 1 ? 'signal1' : 'signal2';
+            
+            document.getElementById(`${prefix}-machine`).className = `signal ${machine ? 'active' : 'inactive'}`;
+            document.getElementById(`${prefix}-executing`).className = `signal ${executing ? 'active' : 'inactive'}`;
+            document.getElementById(`${prefix}-ready`).className = `signal ${ready ? 'active' : 'inactive'}`;
+            
+            // Atualizar indicadores de status
+            const statusPrefix = pallet === 1 ? 'p1' : 'p2';
+            document.getElementById(`${statusPrefix}-machine-status`).className = `signal-status ${machine ? 'active' : ''}`;
+            document.getElementById(`${statusPrefix}-exec-status`).className = `signal-status ${executing ? 'active' : ''}`;
+            document.getElementById(`${statusPrefix}-ready-status`).className = `signal-status ${ready ? 'active' : ''}`;
+        }
+
+        // Funções para simular sensor físico dos paletes
+        function palletEnterMachine(palletNumber) {
+            if (palletNumber === 1) {
+                simulationState.pallet1InMachine = true;
+                // Se P1 tem OP, entrar em SETUP
+                if (simulationState.op1Open) {
+                    simulationState.pallet1Active = true;
+                    simulationState.pallet1Setup = true;
+                    simulationState.pallet1Executing = false;
+                    simulationState.activePallet = 'P1';
+                    simulationState.startTime = new Date();
+                    addLog('📥 Palete 1 entrou na máquina - OP ativa em SETUP');
+                } else {
+                    // P1 sem OP - mostrar aviso
+                    simulationState.pallet1Active = false;
+                    simulationState.pallet1Setup = false;
+                    simulationState.pallet1Executing = false;
+                    addLog('⚠️ Palete 1 entrou na máquina - SEM ORDEM DE PRODUÇÃO');
+                    showNotification('⚠️ Palete 1 na máquina SEM OP! Abra uma OP para iniciar produção', 'warning');
+                }
+                updateSignals(1, true, simulationState.pallet1Executing, false);
+            } else if (palletNumber === 2) {
+                simulationState.pallet2InMachine = true;
+                // Se P2 tem OP, entrar em SETUP
+                if (simulationState.op2Open) {
+                    simulationState.pallet2Active = true;
+                    simulationState.pallet2Setup = true;
+                    simulationState.pallet2Executing = false;
+                    simulationState.activePallet = 'P2';
+                    simulationState.startTime = new Date();
+                    addLog('📥 Palete 2 entrou na máquina - OP ativa em SETUP');
+                } else {
+                    // P2 sem OP - mostrar aviso
+                    simulationState.pallet2Active = false;
+                    simulationState.pallet2Setup = false;
+                    simulationState.pallet2Executing = false;
+                    addLog('⚠️ Palete 2 entrou na máquina - SEM ORDEM DE PRODUÇÃO');
+                    showNotification('⚠️ Palete 2 na máquina SEM OP! Abra uma OP para iniciar produção', 'warning');
+                }
+                updateSignals(2, true, simulationState.pallet2Executing, false);
+            }
+            updatePallets();
+            updateMachineDashboard();
+        }
+
+        function palletExitMachine(palletNumber) {
+            if (palletNumber === 1) {
+                simulationState.pallet1InMachine = false;
+                simulationState.pallet1Active = false;
+                simulationState.pallet1Executing = false;
+                simulationState.pallet1Setup = false;
+                if (simulationState.activePallet === 'P1') {
+                    simulationState.activePallet = '--';
+                    simulationState.startTime = null;
+                }
+                addLog('📤 Palete 1 saiu da máquina');
+                updateSignals(1, false, false, false);
+            } else if (palletNumber === 2) {
+                simulationState.pallet2InMachine = false;
+                simulationState.pallet2Active = false;
+                simulationState.pallet2Executing = false;
+                simulationState.pallet2Setup = false;
+                if (simulationState.activePallet === 'P2') {
+                    simulationState.activePallet = '--';
+                    simulationState.startTime = null;
+                }
+                addLog('📤 Palete 2 saiu da máquina');
+                updateSignals(2, false, false, false);
+            }
+            updatePallets();
+            updateMachineDashboard();
+        }
+
+        // Função para garantir que apenas um palete esteja executando
+        function ensureSingleActivePallet() {
+            // Se ambos estão executando, desativar o que não deveria estar
+            if (simulationState.pallet1Executing && simulationState.pallet2Executing) {
+                // Manter apenas o palete ativo executando
+                if (simulationState.pallet1Active) {
+                    simulationState.pallet2Executing = false;
+                    updateSignals(2, simulationState.pallet2InMachine, false, false);
+                } else if (simulationState.pallet2Active) {
+                    simulationState.pallet1Executing = false;
+                    updateSignals(1, simulationState.pallet1InMachine, false, false);
+                }
+            }
+        }
+
+        // Função para atualizar paletes
+        function updatePallets() {
+            const pallet1 = document.getElementById('pallet1');
+            const pallet2 = document.getElementById('pallet2');
+            
+            // Garantir que apenas um palete esteja executando
+            ensureSingleActivePallet();
+            
+            // Reset classes
+            pallet1.className = 'pallet pallet-1';
+            pallet2.className = 'pallet pallet-2';
+            
+            // Determinar qual palete está ativo (em usinagem)
+            if (simulationState.pallet1Active && simulationState.pallet1InMachine) {
+                // P1 ativo - vai para o centro
+                pallet1.classList.add('active', 'pulse');
+                // P2 inativo - vai para a esquerda
+                pallet2.classList.add('waiting');
+            } else if (simulationState.pallet2Active && simulationState.pallet2InMachine) {
+                // P2 ativo - vai para o centro
+                pallet2.classList.add('active', 'pulse');
+                // P1 inativo - vai para a esquerda
+                pallet1.classList.add('waiting');
+            } else {
+                // Nenhum palete ativo - ambos ficam neutros
+                pallet1.classList.add('neutral');
+                pallet2.classList.add('neutral');
+            }
+            
+            // Atualizar aviso de palete sem OP
+            updatePalletWarning();
+        }
+
+        // Função para atualizar aviso de palete sem OP
+        function updatePalletWarning() {
+            const warning = document.getElementById('pallet-warning');
+            const warningInfo = document.getElementById('warning-pallet-info');
+            
+            // Verificar se há palete ativo sem OP ou palete na máquina sem OP
+            let showWarning = false;
+            let warningText = '';
+            
+            if (simulationState.pallet1Active && !simulationState.op1Open) {
+                showWarning = true;
+                warningText = 'Palete 1 (P1) ativo sem Ordem de Produção';
+            } else if (simulationState.pallet2Active && !simulationState.op2Open) {
+                showWarning = true;
+                warningText = 'Palete 2 (P2) ativo sem Ordem de Produção';
+            } else if (simulationState.pallet1InMachine && !simulationState.op1Open) {
+                showWarning = true;
+                warningText = 'Palete 1 (P1) na máquina SEM OP!';
+            } else if (simulationState.pallet2InMachine && !simulationState.op2Open) {
+                showWarning = true;
+                warningText = 'Palete 2 (P2) na máquina SEM OP!';
+            }
+            
+            // Mostrar/ocultar aviso
+            if (showWarning && !simulationState.machineStopped) {
+                warning.style.display = 'block';
+                warningInfo.textContent = warningText;
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+
+
+        // Funções de controle (mantidas para compatibilidade com cenários)
+        function startOP1() {
+            startOP1WithData('OP-001', 'OP001');
+        }
+
+        function startOP2() {
+            startOP2WithData('OP-002', 'OP002');
+        }
+
+        function simulateProduction() {
+            // Verificar se palete está em SETUP e iniciar produção
+            if (simulationState.pallet1Active && simulationState.pallet1InMachine && simulationState.pallet1Setup && simulationState.op1Open) {
+                // Transição SETUP → PRODUÇÃO
+                simulationState.pallet1Setup = false;
+                simulationState.pallet1Executing = !simulationState.machineStopped;
+                addLog('🚀 Palete 1: SETUP → PRODUÇÃO');
+                updateSignals(1, true, simulationState.pallet1Executing, false);
+                updatePallets();
+                return;
+            }
+            
+            // Verificar se palete está em SETUP e iniciar produção
+            if (simulationState.pallet2Active && simulationState.pallet2InMachine && simulationState.pallet2Setup && simulationState.op2Open) {
+                // Transição SETUP → PRODUÇÃO
+                simulationState.pallet2Setup = false;
+                simulationState.pallet2Executing = !simulationState.machineStopped;
+                addLog('🚀 Palete 2: SETUP → PRODUÇÃO');
+                updateSignals(2, true, simulationState.pallet2Executing, false);
+                updatePallets();
+                return;
+            }
+            
+            // Validar se há palete ativo com OP aberta antes de produzir
+            if (simulationState.pallet1Active && simulationState.pallet1InMachine && simulationState.pallet1Executing && simulationState.op1Open) {
+                simulationState.op1Production++;
+                simulationState.op1ProductionTime += simulationState.op1Data.cycleTime * 1000;
+                
+                // Acumular dados do turno
+                simulationState.turnoTotalProduced++;
+                simulationState.turnoProductionTime += simulationState.op1Data.cycleTime * 1000;
+                
+                // Atualizar ciclo médio do turno
+                const totalCycles = simulationState.turnoTotalProduced;
+                simulationState.turnoAverageCycle = simulationState.turnoProductionTime / totalCycles / 1000;
+                
+                // Atualizar sinais com feedback visual
+                updateSignals(1, true, true, true);
+                setTimeout(() => updateSignals(1, true, true, false), 1000);
+                
+                // Verificar se atingiu quantidade planejada
+                if (simulationState.producedQty >= simulationState.plannedQty) {
+                    addLog(`✅ OP ${simulationState.currentOP} CONCLUÍDA no Palete 1 - ${simulationState.producedQty}/${simulationState.plannedQty} peças`);
+                    // Auto-fechar OP quando concluída
+                    setTimeout(() => closeOP(1), 2000);
+            } else {
+                    addLog(`🔧 Peça produzida P1 - ${simulationState.producedQty}/${simulationState.plannedQty} (${simulationState.plannedQty - simulationState.producedQty} restantes)`);
+                }
+                
+                updateMachineDashboard();
+                
+            } else if (simulationState.pallet2Active && simulationState.pallet2InMachine && simulationState.pallet2Executing && simulationState.op2Open) {
+                simulationState.op2Production++;
+                simulationState.op2ProductionTime += simulationState.op2Data.cycleTime * 1000;
+                
+                // Acumular dados do turno
+                simulationState.turnoTotalProduced++;
+                simulationState.turnoProductionTime += simulationState.op2Data.cycleTime * 1000;
+                
+                // Atualizar ciclo médio do turno
+                const totalCycles = simulationState.turnoTotalProduced;
+                simulationState.turnoAverageCycle = simulationState.turnoProductionTime / totalCycles / 1000;
+                
+                // Atualizar sinais com feedback visual
+                updateSignals(2, true, true, true);
+                setTimeout(() => updateSignals(2, true, true, false), 1000);
+                
+                // Verificar se atingiu quantidade planejada
+                if (simulationState.producedQty >= simulationState.plannedQty) {
+                    addLog(`✅ OP ${simulationState.currentOP} CONCLUÍDA no Palete 2 - ${simulationState.producedQty}/${simulationState.plannedQty} peças`);
+                    // Auto-fechar OP quando concluída
+                    setTimeout(() => closeOP(2), 2000);
+                } else {
+                    addLog(`🔧 Peça produzida P2 - ${simulationState.producedQty}/${simulationState.plannedQty} (${simulationState.plannedQty - simulationState.producedQty} restantes)`);
+                }
+                
+                updateMachineDashboard();
+                
+                } else {
+                // Melhor feedback quando não pode produzir
+                if (simulationState.machineStopped) {
+                    addLog('🛑 Máquina parada - Retome a máquina para continuar a produção');
+                    showNotification('🛑 Máquina parada - Retome a máquina para continuar a produção', 'error');
+                } else if (!simulationState.op1Open && !simulationState.op2Open) {
+                    addLog('⚠️ Nenhuma OP aberta - Abra uma OP para iniciar produção');
+                    showNotification('⚠️ Nenhuma OP aberta - Abra uma OP para iniciar produção', 'warning');
+                } else if (!simulationState.pallet1Active && !simulationState.pallet2Active) {
+                    addLog('⚠️ Nenhum palete ativo - Ative um palete para produção');
+                    showNotification('⚠️ Nenhum palete ativo - Ative um palete para produção', 'warning');
+                } else {
+                    addLog('⚠️ Condições não atendidas para produção');
+                    showNotification('⚠️ Condições não atendidas para produção', 'warning');
+                }
+            }
+        }
+
+        function switchPallets() {
+            // Simular troca física dos paletes (sensor físico)
+            if (simulationState.pallet1InMachine) {
+                // P1 está na máquina - trocar para P2
+                palletExitMachine(1);
+                palletEnterMachine(2);
+                addLog('🔄 Troca física: P1 saiu, P2 entrou na máquina');
+            } else if (simulationState.pallet2InMachine) {
+                // P2 está na máquina - trocar para P1
+                palletExitMachine(2);
+                palletEnterMachine(1);
+                addLog('🔄 Troca física: P2 saiu, P1 entrou na máquina');
+            } else {
+                // Nenhum palete na máquina
+                addLog('⚠️ Nenhum palete na máquina para trocar');
+                showNotification('⚠️ Nenhum palete na máquina para trocar', 'warning');
+            }
+        }
+
+        // Cenários pré-definidos
+        function scenario1() {
+            resetSimulation();
+            setTimeout(() => {
+                startOP1();
+                addLog('Cenário 1: Palete 1 ativo');
+            }, 300);
+        }
+
+        function scenario2() {
+            resetSimulation();
+            setTimeout(() => {
+                startOP2();
+                addLog('Cenário 2: Palete 2 ativo');
+            }, 300);
+        }
+
+        function scenario3() {
+            resetSimulation();
+            setTimeout(() => {
+                startOP1();
+                setTimeout(() => {
+                    startOP2();
+                    setTimeout(() => {
+                        switchPallets();
+                        addLog('Cenário 3: Troca de paletes');
+                    }, 1500);
+                }, 1500);
+            }, 300);
+        }
+
+        // Função para gerar relatório de linha do tempo
+        function generateTimelineReport() {
+            if (simulationEvents.length === 0) {
+                showNotification('⚠️ Nenhum evento registrado na simulação atual', 'warning');
+                return;
+            }
+            
+            const modal = document.getElementById('timelineReportModal');
+            const content = document.getElementById('timeline-report-content');
+            
+            // Calcular estatísticas
+            const stats = calculateSimulationStats();
+            
+            // Gerar HTML do relatório
+            content.innerHTML = generateReportHTML(stats);
+            
+            modal.style.display = 'block';
+        }
+        
+        // Função para calcular estatísticas da simulação
+        function calculateSimulationStats() {
+            const stats = {
+                totalEvents: simulationEvents.length,
+                startTime: simulationEvents[0]?.timestamp,
+                endTime: simulationEvents[simulationEvents.length - 1]?.timestamp,
+                duration: 0,
+                opsOpened: 0,
+                opsClosed: 0,
+                palletSwitches: 0,
+                productions: 0,
+                stops: 0,
+                resumes: 0,
+                currentOP: simulationState.currentOP,
+                currentOperator: simulationState.machineOperator,
+                totalProduced: simulationState.turnoTotalProduced,
+                totalScrap: simulationState.turnoTotalScrap,
+                oee: {
+                    availability: 0,
+                    performance: 0,
+                    quality: 0,
+                    overall: 0
+                }
+            };
+            
+            // Calcular duração
+            if (stats.startTime && stats.endTime) {
+                stats.duration = Math.floor((stats.endTime - stats.startTime) / 1000);
+            }
+            
+            // Contar eventos por tipo
+            simulationEvents.forEach(event => {
+                if (event.message.includes('aberta')) stats.opsOpened++;
+                if (event.message.includes('fechada') || event.message.includes('CONCLUÍDA')) stats.opsClosed++;
+                if (event.message.includes('Troca') || event.message.includes('troca')) stats.palletSwitches++;
+                if (event.message.includes('produzida') || event.message.includes('🔧')) stats.productions++;
+                if (event.message.includes('parada') || event.message.includes('PARADA')) stats.stops++;
+                if (event.message.includes('retomada') || event.message.includes('Retomar')) stats.resumes++;
+            });
+            
+            // Calcular OEE
+            const totalTime = simulationState.turnoProductionTime + simulationState.turnoStopTime;
+            stats.oee.availability = totalTime > 0 ? Math.round((simulationState.turnoProductionTime / totalTime) * 100) : 0;
+            stats.oee.performance = simulationState.turnoAverageCycle > 0 ? 
+                Math.min(100, Math.round((1000 / simulationState.turnoAverageCycle) * 100)) : 0;
+            stats.oee.quality = simulationState.turnoTotalProduced > 0 ? 
+                Math.round(((simulationState.turnoTotalProduced - simulationState.turnoTotalScrap) / simulationState.turnoTotalProduced) * 100) : 0;
+            stats.oee.overall = Math.round((stats.oee.availability * stats.oee.performance * stats.oee.quality) / 10000);
+            
+            return stats;
+        }
+        
+        // Função para gerar HTML do relatório
+        function generateReportHTML(stats) {
+            const durationMinutes = Math.floor(stats.duration / 60);
+            const durationSeconds = stats.duration % 60;
+            
+            return `
+                <div class="report-section">
+                    <h4>📊 Resumo da Simulação</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Duração Total:</span>
+                            <span class="stat-value">${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total de Eventos:</span>
+                            <span class="stat-value">${stats.totalEvents}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">OPs Abertas:</span>
+                            <span class="stat-value">${stats.opsOpened}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">OPs Fechadas:</span>
+                            <span class="stat-value">${stats.opsClosed}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Troca de Paletes:</span>
+                            <span class="stat-value">${stats.palletSwitches}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Peças Produzidas:</span>
+                            <span class="stat-value">${stats.totalProduced}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Peças com Defeito:</span>
+                            <span class="stat-value">${stats.totalScrap}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Paradas:</span>
+                            <span class="stat-value">${stats.stops}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>📈 Métricas OEE</h4>
+                    <div class="oee-grid">
+                        <div class="oee-item">
+                            <span class="oee-label">Disponibilidade:</span>
+                            <span class="oee-value">${stats.oee.availability}%</span>
+                        </div>
+                        <div class="oee-item">
+                            <span class="oee-label">Performance:</span>
+                            <span class="oee-value">${stats.oee.performance}%</span>
+                        </div>
+                        <div class="oee-item">
+                            <span class="oee-label">Qualidade:</span>
+                            <span class="oee-value">${stats.oee.quality}%</span>
+                        </div>
+                        <div class="oee-item oee-total">
+                            <span class="oee-label">OEE Geral:</span>
+                            <span class="oee-value">${stats.oee.overall}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>⏰ Linha do Tempo de Eventos</h4>
+                    <div class="timeline-container">
+                        ${simulationEvents.map(event => `
+                            <div class="timeline-item">
+                                <span class="timeline-time">${event.time}</span>
+                                <span class="timeline-event">${event.message}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>👤 Informações Atuais</h4>
+                    <div class="current-info">
+                        <p><strong>OP Ativa:</strong> ${stats.currentOP || 'Nenhuma'}</p>
+                        <p><strong>Operador:</strong> ${stats.currentOperator || 'Não definido'}</p>
+                        <p><strong>Status da Máquina:</strong> ${simulationState.machineStatus}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Função para fechar modal do relatório
+        function closeTimelineReport() {
+            document.getElementById('timelineReportModal').style.display = 'none';
+        }
+        
+        // Função para exportar relatório
+        function exportTimelineReport() {
+            const stats = calculateSimulationStats();
+            const reportText = generateTextReport(stats);
+            
+            const blob = new Blob([reportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_simulacao_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('📥 Relatório exportado com sucesso!', 'success');
+        }
+        
+        // Função para gerar relatório em texto
+        function generateTextReport(stats) {
+            const durationMinutes = Math.floor(stats.duration / 60);
+            const durationSeconds = stats.duration % 60;
+            
+            return `
+RELATÓRIO DE SIMULAÇÃO - TeepOEE Duplo Palete
+===============================================
+Data: ${new Date().toLocaleDateString()}
+Hora: ${new Date().toLocaleTimeString()}
+
+RESUMO DA SIMULAÇÃO
+-------------------
+Duração Total: ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}
+Total de Eventos: ${stats.totalEvents}
+OPs Abertas: ${stats.opsOpened}
+OPs Fechadas: ${stats.opsClosed}
+Troca de Paletes: ${stats.palletSwitches}
+Peças Produzidas: ${stats.totalProduced}
+Peças com Defeito: ${stats.totalScrap}
+Paradas: ${stats.stops}
+
+MÉTRICAS OEE
+------------
+Disponibilidade: ${stats.oee.availability}%
+Performance: ${stats.oee.performance}%
+Qualidade: ${stats.oee.quality}%
+OEE Geral: ${stats.oee.overall}%
+
+INFORMAÇÕES ATUAIS
+------------------
+OP Ativa: ${stats.currentOP || 'Nenhuma'}
+Operador: ${stats.currentOperator || 'Não definido'}
+Status da Máquina: ${simulationState.machineStatus}
+
+LINHA DO TEMPO DE EVENTOS
+-------------------------
+${simulationEvents.map(event => `${event.time} - ${event.message}`).join('\n')}
+
+===============================================
+Relatório gerado automaticamente pelo TeepOEE
+            `;
+        }
+
+        function resetSimulation() {
+            // Limpar eventos da simulação anterior
+            simulationEvents = [];
+            
+            simulationState = {
+                pallet1Active: false,
+                pallet2Active: false,
+                pallet1InMachine: false,
+                pallet2InMachine: false,
+                pallet1Executing: false,
+                pallet2Executing: false,
+                pallet1Setup: false,
+                pallet2Setup: false,
+                op1Open: false,
+                op2Open: false,
+                op1Production: 0,
+                op2Production: 0,
+                op1Scrap: 0,
+                op2Scrap: 0,
+                op1ProductionTime: 0,
+                op2ProductionTime: 0,
+                currentScenario: 'idle',
+                // Dashboard data
+                currentOP: '--',
+                activePallet: '--',
+                operatorName: '--',
+                plannedQty: 0,
+                producedQty: 0,
+                scrapQty: 0,
+                productionTime: 0,
+                stopTime: 0,
+                realCycle: 0,
+                machineStatus: 'stopped',
+                startTime: null,
+                // Dados específicos das OPs
+                op1Data: null,
+                op2Data: null,
+                // Operador da máquina (não do palete)
+                machineOperator: null,
+                // Parada de máquina
+                machineStopped: false,
+                stopReason: '',
+                stopDescription: '',
+                stopSeverity: '',
+                stopOperator: '',
+                stopTimestamp: null,
+                stopDuration: 0,
+                // Índices OEE do turno/máquina (não zeram na troca de palete)
+                turnoStartTime: null,
+                turnoProductionTime: 0,
+                turnoStopTime: 0,
+                turnoTotalProduced: 0,
+                turnoTotalScrap: 0,
+                turnoAverageCycle: 0
+            };
+            
+            updateSignals(1, false, false, false);
+            updateSignals(2, false, false, false);
+            updatePallets();
+            updateMachineDashboard();
+            updateControlButtons();
+            
+            addLog('Simulação resetada');
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSignals(1, false, false, false);
+            updateSignals(2, false, false, false);
+            updatePallets();
+            updateMachineDashboard();
+            updateControlButtons();
+            
+            // Event listener para o formulário de abertura de OP
+            document.getElementById('opForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                processOPOpening();
+            });
+            
+            // Event listener para o formulário de fechamento de OP
+            document.getElementById('closeOPForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                processOPClosing();
+            });
+            
+            // Event listener para o formulário de parada de máquina
+            document.getElementById('stopMachineForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                processMachineStop();
+            });
+            
+            // Atualizar dashboard a cada segundo
+            setInterval(updateMachineDashboard, 1000);
+            
+            addLog('Sistema TeepMES iniciado');
+        });
+
+        // Simulação automática de produção
+        setInterval(() => {
+            if (Math.random() < 0.3 && 
+                ((simulationState.pallet1Active && simulationState.pallet1InMachine && simulationState.pallet1Executing) ||
+                 (simulationState.pallet2Active && simulationState.pallet2InMachine && simulationState.pallet2Executing))) {
+                simulateProduction();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
